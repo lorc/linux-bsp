@@ -115,7 +115,9 @@ static const struct cpg_core_clk r8a779f0_core_clks[] __initconst = {
 };
 
 static const struct mssr_mod_clk r8a779f0_mod_clks[] __initconst = {
+#ifndef CONFIG_XEN
 	DEF_MOD("hscif0",	514,	R8A779F0_CLK_S0D3),
+#endif
 	DEF_MOD("hscif1",	515,	R8A779F0_CLK_S0D3),
 	DEF_MOD("hscif2",	516,	R8A779F0_CLK_S0D3),
 	DEF_MOD("hscif3",	517,	R8A779F0_CLK_S0D3),
@@ -137,7 +139,9 @@ static const struct mssr_mod_clk r8a779f0_mod_clks[] __initconst = {
 	DEF_MOD("rtdm3",	701,	R8A779F0_CLK_S0D2),
 	DEF_MOD("scif0",	702,	R8A779F0_CLK_S0D12_PER),
 	DEF_MOD("scif1",	703,	R8A779F0_CLK_S0D12_PER),
+#ifndef CONFIG_XEN
 	DEF_MOD("scif3",	704,	R8A779F0_CLK_S0D12_PER),
+#endif
 	DEF_MOD("scif4",	705,	R8A779F0_CLK_S0D12_PER),
 	DEF_MOD("sdhi0",	706,	R8A779F0_CLK_SD0),
 	DEF_MOD("sydm1",	709,	R8A779F0_CLK_S0D3),
