@@ -64,6 +64,7 @@ enum DIE_DT {
 
 	DT_MASK		= 0xF0,
 	DIE		= 0x08,	/* Descriptor Interrupt Enable */
+	AXIE		= 0x04,	/* AXI Error */
 };
 
 struct rswitch_desc {
@@ -109,6 +110,7 @@ struct rswitch_gwca_chain {
 	int index;
 	bool dir_tx;
 	bool gptp;
+	bool xen_frontend;
 	union {
 		struct rswitch_ext_desc *ring;
 		struct rswitch_ext_ts_desc *ts_ring;
@@ -117,9 +119,12 @@ struct rswitch_gwca_chain {
 	u32 num_ring;
 	u32 cur;
 	u32 dirty;
+	u32 osid;
 	struct sk_buff **skb;
 
 	struct net_device *ndev;	/* chain to ndev for irq */
+	struct rswitch_desc *desc;
+	struct rswitch_vmq_back_info *back_info;
 };
 
 #define RSWITCH_MAX_NUM_CHAINS	128
@@ -181,6 +186,8 @@ struct rswitch_device {
 	int port;
 	struct rswitch_etha *etha;
 	int remote_chain;
+	bool pv_device;
+	struct rswitch_vmq_front_info *front_info;
 };
 
 struct rswitch_private {
@@ -204,14 +211,36 @@ struct rswitch_private {
 
 extern const struct net_device_ops rswitch_netdev_ops;
 
-int rswitch_txdmac_init(struct net_device *ndev, struct rswitch_private *priv);
+struct rswitch_gwca_chain *rswitch_gwca_get(struct rswitch_private *priv);
+void rswitch_gwca_put(struct rswitch_private *priv,
+		      struct rswitch_gwca_chain *c);
+
+int rswitch_txdmac_init(struct net_device *ndev, struct rswitch_private *priv,
+			int chain_num);
 void rswitch_txdmac_free(struct net_device *ndev, struct rswitch_private *priv);
 
-int rswitch_rxdmac_init(struct net_device *ndev, struct rswitch_private *priv);
+int rswitch_rxdmac_init(struct net_device *ndev, struct rswitch_private *priv,
+			int chain_num);
 void rswitch_rxdmac_free(struct net_device *ndev, struct rswitch_private *priv);
 
 int rswitch_poll(struct napi_struct *napi, int budget);
+int rswitch_tx_free(struct net_device *ndev, bool free_txed_only);
 
-int rswitch_xen_ndev_register(struct rswitch_private *priv, int index);
-int rswitch_xen_connect_devs(struct rswitch_device *rdev1,
-			     struct rswitch_device *rdev2);
+void rswitch_gwca_chain_register(struct rswitch_private *priv,
+				 struct rswitch_gwca_chain *c, bool ts);
+
+void rswitch_trigger_chain(struct rswitch_private *priv,
+			   struct rswitch_gwca_chain *chain);
+void rswitch_enadis_data_irq(struct rswitch_private *priv, int index,
+			     bool enable);
+
+struct rswitch_private *rswitch_find_priv(void);
+
+void rswitch_vmq_front_trigger_tx(struct rswitch_device* rdev);
+void rswitch_vmq_front_rx_done(struct rswitch_device* rdev);
+void rswitch_vmq_back_data_irq(struct rswitch_gwca_chain *c);
+
+static inline bool rswitch_is_front_dev(struct rswitch_device *rdev)
+{
+	return rdev->front_info != NULL;
+}
