@@ -11,6 +11,7 @@
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/module.h>
+#include <linux/inet.h>
 #include <linux/net_tstamp.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
@@ -2528,6 +2529,41 @@ static int rswitch_free_irqs(struct rswitch_private *priv)
 	return 0;
 }
 
+#define FWLTHTL0_FMT_IPV4	1
+#define FWIP4SC_IP4IIDS		BIT(23)
+
+static void rswitch_setup_fwd_test(struct rswitch_private *priv, __be32 ipaddr,  int rx_chain)
+{
+	pr_info("ip addr is %pI4\n", &ipaddr);
+
+	/* Match only DST address */
+	rs_write32(FWIP4SC_IP4IIDS, priv->addr + FWIP4SC);
+
+	/* Match IPv4 packets that are not TCP or UDP */
+	rs_write32(FWLTHTL0_FMT_IPV4, priv->addr + FWLTHTL0);
+	/* No VLAN tags */
+	rs_write32(0, priv->addr + FWLTHTL1);
+	/* No ports and no hash for now */
+	rs_write32(0, priv->addr + FWLTHTL2);
+	/* Match all source IP addresses */
+	rs_write32(0, priv->addr + FWLTHTL3);
+	/* Math our destination address */
+	rs_write32(cpu_to_le32(be32_to_cpu(ipaddr)), priv->addr + FWLTHTL4);
+	/* No MSDU and GATE features */
+	rs_write32(0, priv->addr + FWLTHTL5);
+	/* No MeTeR and FREF features */
+	rs_write32(0, priv->addr + FWLTHTL6);
+	/* Source Lock set to TSN0 and no Routing */
+	rs_write32(BIT(0) << 16, priv->addr + FWLTHTL7);
+	/* Send to designated RX chain */
+	rs_write32(rx_chain, priv->addr + FWLTHTL80);
+	/* Send to GWCA0 */
+	rs_write32(BIT(3), priv->addr + FWLTHTL9);
+	/* TODO: Poll FWLTHTLR.LTHTL */
+	msleep(1);
+	pr_info("FWLTHTL = %x\n", rs_read32(priv->addr + FWLTHTLR));
+}
+
 static void rswitch_fwd_init(struct rswitch_private *priv)
 {
 	int i;
@@ -2552,6 +2588,21 @@ static void rswitch_fwd_init(struct rswitch_private *priv)
 	rs_write32(FWPC1_DDE, priv->addr + FWPC10 + (3 * 0x10));
 	/* TODO: add chrdev for fwd */
 	/* TODO: add proc for fwd */
+
+	/* Reset L3 table */
+	rs_write32(1, priv->addr + FWLTHTIM);
+	/* TODO: Poll  FWLTHTIM.LTHR*/
+	msleep(1);
+	/* TODO: Fail gracefully */
+	if (!(rs_read32(priv->addr + FWLTHTIM) & BIT(1)))
+		panic("L3 table is not ready\n");
+
+	/* Enable 512 entries in non secure table and 3 hash collisions */
+	rs_write32(512 << 16 | 3, priv->addr + FWLTHHEC);
+
+	/* Disable IPv6 and IPv4 hash for now */
+	/* TODO: Enable it back */
+	rs_write32(0, priv->addr + FWSFHEC);
 }
 
 static int rswitch_init(struct rswitch_private *priv)
@@ -2698,7 +2749,9 @@ static int renesas_eth_sw_probe(struct platform_device *pdev)
 
 	rswitch_xen_ndev_register(priv, 0);
 	rswitch_xen_ndev_register(priv, 1);
-	rswitch_xen_connect_devs(priv->rdev[3], priv->rdev[4]);
+	/* rswitch_xen_connect_devs(priv->rdev[3], priv->rdev[4]); */
+
+	rswitch_setup_fwd_test(priv, in_aton("192.168.5.2"), priv->rdev[3]->rx_chain->index);
 
 	device_set_wakeup_capable(&pdev->dev, 1);
 
