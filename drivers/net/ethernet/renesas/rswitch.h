@@ -165,6 +165,10 @@ struct rswitch_mfwd_mac_table_entry {
 struct rswitch_mfwd {
 	struct rswitch_mac_table_entry *mac_table_entries;
 	int num_mac_table_entries;
+	struct rswitch_gwca_chain *learning_chain;
+	struct rswitch_gwca_chain *exception_chain;
+	struct work_struct learning_work;
+	struct work_struct exception_work;
 };
 
 struct rswitch_device {

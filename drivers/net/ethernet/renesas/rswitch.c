@@ -9,6 +9,7 @@
 #include <linux/etherdevice.h>
 #include <linux/ethtool.h>
 #include <linux/kernel.h>
+#include <linux/ip.h>
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/net_tstamp.h>
@@ -783,7 +784,77 @@ enum rswitch_etha_mode {
 
 #define FWPBFCSDC(j, i)         (FWPBFCSDC00 + (i) * 0x10 + (j) * 0x04)
 
+#define FWCLPRC_USIDLF		BIT(0)
+#define FWCLPRC_UDMACLF		BIT(4)
+#define FWCLPRC_USMACLF		BIT(5)
+#define FWCLPRC_UPSMACLF	BIT(6)
+#define FWCLPRC_UVLAFLF		BIT(7)
+#define FWCLPRC_ALL		(FWCLPRC_USIDLF | FWCLPRC_UDMACLF | \
+				 FWCLPRC_USMACLF | FWCLPRC_UPSMACLF | \
+				 FWCLPRC_UVLAFLF)
+#define FWCEPRC0_EPHYEEF	BIT(0)
+#define FWCEPRC0_EPCRCEEF	BIT(1)
+#define FWCEPRC0_ENIBEEF	BIT(2)
+#define FWCEPRC0_EFCSEEF	BIT(3)
+#define FWCEPRC0_EFFMFEEF	BIT(4)
+#define FWCEPRC0_ECFSEEF	BIT(5)
+#define FWCEPRC0_ECFFCEEF	BIT(6)
+#define FWCEPRC0_ERFFEF		BIT(7)
+#define FWCEPRC0_ERPOOEF	BIT(8)
+#define FWCEPRC0_EBOEEF		BIT(9)
+#define FWCEPRC0_EUEEF		BIT(10)
+#define FWCEPRC0_EOEEF		BIT(11)
+#define FWCEPRC0_ETFEF		BIT(12)
+#define FWCEPRC0_GAREEEF       	BIT(16)
+#define FWCEPRC0_GAXEEF       	BIT(17)
+#define FWCEPRC0_GSEQEEF       	BIT(18)
+#define FWCEPRC0_GTFEF       	BIT(20)
+#define FWCEPRC0_GDNEEF       	BIT(21)
+#define FWCEPRC0_DDEEF       	BIT(24)
+#define FWCEPRC0_DDFEEF       	BIT(25)
+#define FWCEPRC0_DDFSEF       	BIT(26)
+#define FWCEPRC0_ALL (FWCEPRC0_EPHYEEF | FWCEPRC0_EPCRCEEF | \
+		      FWCEPRC0_ENIBEEF | FWCEPRC0_EFCSEEF | \
+		      FWCEPRC0_EFFMFEEF | FWCEPRC0_ECFSEEF | \
+		      FWCEPRC0_ECFFCEEF | FWCEPRC0_ERFFEF | \
+		      FWCEPRC0_ERPOOEF | FWCEPRC0_EBOEEF | \
+		      FWCEPRC0_EUEEF | FWCEPRC0_EOEEF | FWCEPRC0_ETFEF | \
+		      FWCEPRC0_GAREEEF | FWCEPRC0_GAXEEF | FWCEPRC0_GSEQEEF | \
+		      FWCEPRC0_GTFEF | FWCEPRC0_GDNEEF | FWCEPRC0_DDEEF | \
+		      FWCEPRC0_DDFEEF | FWCEPRC0_DDFSEF )
+
+#define FWCEPRC1_FMSDUFEF	BIT(0)
+#define FWCEPRC1_FGATEFEF	BIT(1)
+#define FWCEPRC1_FMTRFEF	BIT(2)
+#define FWCEPRC1_FIFFEF		BIT(8)
+#define FWCEPRC1_FSFFEF		BIT(9)
+#define FWCEPRC1_ALL	(FWCEPRC1_FMSDUFEF | FWCEPRC1_FGATEFEF | \
+			 FWCEPRC1_FMTRFEF | FWCEPRC1_FIFFEF | FWCEPRC1_FSFFEF)
+
+#define FWCEPRC2_FLTHUFEF	BIT(0)
+#define FWCEPRC2_FDMACUFEF	BIT(3)
+#define FWCEPRC2_FSMACUFEF	BIT(4)
+#define FWCEPRC2_FVLANUFEF	BIT(5)
+#define FWCEPRC2_FDDNTFEF	BIT(8)
+#define FWCEPRC2_FLTHNTFEF	BIT(9)
+#define FWCEPRC2_FLTWNTFEF	BIT(11)
+#define FWCEPRC2_FPBNTFEF	BIT(12)
+#define FWCEPRC2_FLTHSLFEF	BIT(16)
+#define FWCEPRC2_FDMACSLFEF	BIT(19)
+#define FWCEPRC2_FSMACSLFEF	BIT(20)
+#define FWCEPRC2_FVLANSLFEF	BIT(21)
+#define FWCEPRC2_FLTHFSFEF	BIT(24)
+#define FWCEPRC2_FWMFEF		BIT(26)
+#define FWCEPRC2_ALL	(FWCEPRC2_FLTHUFEF | FWCEPRC2_FDMACUFEF | \
+			 FWCEPRC2_FSMACUFEF | FWCEPRC2_FVLANUFEF | \
+			 FWCEPRC2_FDDNTFEF | FWCEPRC2_FLTHNTFEF | \
+			 FWCEPRC2_FLTWNTFEF | FWCEPRC2_FPBNTFEF | \
+			 FWCEPRC2_FLTHSLFEF | FWCEPRC2_FDMACSLFEF | \
+			 FWCEPRC2_FSMACSLFEF | FWCEPRC2_FVLANSLFEF | \
+			 FWCEPRC2_FLTHFSFEF | FWCEPRC2_FWMFEF)
+
 /* SerDes */
+
 enum rswitch_serdes_mode {
 	USXGMII,
 	SGMII,
@@ -2093,6 +2164,7 @@ static int rswitch_gwca_chain_init(struct net_device *ndev,
 {
 	int i, bit;
 	int index = c->index;	/* Keep the index before memset() */
+	struct device *dev;
 	struct sk_buff *skb;
 
 	memset(c, 0, sizeof(*c));
@@ -2116,16 +2188,23 @@ static int rswitch_gwca_chain_init(struct net_device *ndev,
 		}
 	}
 
+	if (ndev)
+		dev = ndev->dev.parent;
+	else
+		dev = &priv->pdev->dev;
+
 	if (gptp)
-		c->ts_ring = dma_alloc_coherent(ndev->dev.parent,
+		c->ts_ring = dma_alloc_coherent(dev,
 				sizeof(struct rswitch_ext_ts_desc) *
 				(c->num_ring + 1), &c->ring_dma, GFP_KERNEL);
 	else
-		c->ring = dma_alloc_coherent(ndev->dev.parent,
+		c->ring = dma_alloc_coherent(dev,
 				sizeof(struct rswitch_ext_desc) *
 				(c->num_ring + 1), &c->ring_dma, GFP_KERNEL);
-	if (!c->ts_ring && !c->ring)
+	if (!c->ts_ring && !c->ring) {
+		dev_err(dev, "Failed to allocate ring buffer for descriptors\n");
 		goto out;
+	}
 
 	index = c->index / 32;
 	bit = BIT(c->index % 32);
@@ -2148,17 +2227,23 @@ static int rswitch_gwca_chain_format(struct net_device *ndev,
 {
 	struct rswitch_ext_desc *ring;
 	struct rswitch_desc *desc;
+	struct device *dev;
 	int tx_ring_size = sizeof(*ring) * c->num_ring;
 	int i;
 	dma_addr_t dma_addr;
 
+	if (ndev)
+		dev = ndev->dev.parent;
+	else
+		dev = &priv->pdev->dev;
+
 	memset(c->ring, 0, tx_ring_size);
 	for (i = 0, ring = c->ring; i < c->num_ring; i++, ring++) {
 		if (!c->dir_tx) {
-			dma_addr = dma_map_single(ndev->dev.parent,
+			dma_addr = dma_map_single(dev,
 					c->skb[i]->data, PKT_BUF_SZ,
 					DMA_FROM_DEVICE);
-			if (!dma_mapping_error(ndev->dev.parent, dma_addr))
+			if (!dma_mapping_error(dev, dma_addr))
 				ring->info_ds = cpu_to_le16(PKT_BUF_SZ);
 			ring->dptrl = cpu_to_le32(lower_32_bits(dma_addr));
 			ring->dptrh = cpu_to_le32(upper_32_bits(dma_addr));
@@ -2463,6 +2548,18 @@ static void rswitch_queue_interrupt(struct net_device *ndev)
 	}
 }
 
+static void rswitch_queue_fwd_interrupt(struct rswitch_private *priv,
+					struct rswitch_gwca_chain *c)
+{
+	rswitch_enadis_data_irq(priv, c->index, false);
+	if (c == priv->mfwd.exception_chain)
+		queue_work(system_unbound_wq, &priv->mfwd.exception_work);
+	else if (c == priv->mfwd.learning_chain)
+		queue_work(system_unbound_wq, &priv->mfwd.learning_work);
+	else
+		WARN_ONCE(true, "Unknown chain in rswitch_queue_fwd_interrupt\n");
+}
+
 static irqreturn_t __maybe_unused rswitch_data_irq(struct rswitch_private *priv, u32 *dis)
 {
 	struct rswitch_gwca_chain *c;
@@ -2473,11 +2570,14 @@ static irqreturn_t __maybe_unused rswitch_data_irq(struct rswitch_private *priv,
 		c = &priv->gwca.chains[i];
 		index = c->index / 32;
 		bit = BIT(c->index % 32);
-		if (!(dis[index] & bit) || !(test_bit(i , priv->gwca.used)))
+		if (!(dis[index] & bit) || !(test_bit(i, priv->gwca.used)))
 			continue;
 
 		rswitch_ack_data_irq(priv, c->index);
-		rswitch_queue_interrupt(c->ndev);
+		if (c->ndev)
+			rswitch_queue_interrupt(c->ndev);
+		else
+			rswitch_queue_fwd_interrupt(priv, c);
 	}
 
 	return IRQ_HANDLED;
@@ -2528,6 +2628,80 @@ static int rswitch_free_irqs(struct rswitch_private *priv)
 	return 0;
 }
 
+static void rswitch_fwd_exception_work(struct work_struct *work)
+{
+	struct rswitch_mfwd *mfwd =
+		container_of(work, struct rswitch_mfwd, exception_work);
+	struct rswitch_private *priv =
+		container_of(mfwd, struct rswitch_private, mfwd);
+	struct rswitch_gwca_chain *c = mfwd->exception_chain;
+	int entry = c->cur % c->num_ring;
+	struct rswitch_ext_desc *desc = &c->ring[entry];
+
+	pr_info("Got exception descriptor\n");
+	while ((desc->die_dt & DT_MASK) != DT_FEMPTY) {
+		u32 fesf;
+		u8 fwdc;
+
+		dma_rmb();
+		fesf = le64_to_cpu(desc->info1) >> 40;
+		fwdc = fesf & 0xF;
+		pr_info("Exception: FWDC: %d FESF: 0x%x\n", fwdc, fesf);
+
+		desc->info_ds = cpu_to_le16(PKT_BUF_SZ);
+		dma_wmb();
+		desc->die_dt = DT_FEMPTY | DIE;
+
+		entry = (++c->cur) % c->num_ring;
+		desc = &c->ring[entry];
+	}
+
+	rswitch_enadis_data_irq(priv, mfwd->exception_chain->index, true);
+}
+
+static void rswitch_fwd_learning_work(struct work_struct *work)
+{
+	struct rswitch_mfwd *mfwd =
+		container_of(work, struct rswitch_mfwd, learning_work);
+	struct rswitch_private *priv =
+		container_of(mfwd, struct rswitch_private, mfwd);
+	struct rswitch_gwca_chain *c = mfwd->learning_chain;
+	int entry = c->cur % c->num_ring;
+	struct rswitch_ext_desc *desc = &c->ring[entry];
+
+	while ((desc->die_dt & DT_MASK) != DT_FEMPTY) {
+		u32 fesf;
+		u8 fwdc;
+		struct sk_buff *skb = c->skb[entry];
+		struct ethhdr *ethhdr;
+		struct iphdr *iphdr;
+
+		dma_rmb();
+		fesf = le64_to_cpu(desc->info1) >> 40;
+		fwdc = fesf & 0xF;
+		pr_info("Learning FWDC: %d FESF: 0x%x\n", fwdc, fesf);
+
+		skb_reset_mac_header(skb);
+		skb_reset_network_header(skb);
+
+		ethhdr = (struct ethhdr*)skb_mac_header(skb);
+		skb_set_network_header(skb, sizeof(*ethhdr));
+
+		iphdr = ip_hdr(skb);
+		pr_info("from %pM %pI4 to %pM %pI4 proto %x %x\n", ethhdr->h_source, &iphdr->saddr,
+			ethhdr->h_dest, &iphdr->daddr, ethhdr->h_proto, iphdr->protocol);
+
+		desc->info_ds = cpu_to_le16(PKT_BUF_SZ);
+		dma_wmb();
+		desc->die_dt = DT_FEMPTY | DIE;
+
+		entry = (++c->cur) % c->num_ring;
+		desc = &c->ring[entry];
+	}
+
+	rswitch_enadis_data_irq(priv, mfwd->learning_chain->index, true);
+}
+
 static void rswitch_fwd_init(struct rswitch_private *priv)
 {
 	int i;
@@ -2552,6 +2726,61 @@ static void rswitch_fwd_init(struct rswitch_private *priv)
 	rs_write32(FWPC1_DDE, priv->addr + FWPC10 + (3 * 0x10));
 	/* TODO: add chrdev for fwd */
 	/* TODO: add proc for fwd */
+
+	INIT_WORK(&priv->mfwd.exception_work, rswitch_fwd_exception_work);
+	INIT_WORK(&priv->mfwd.learning_work, rswitch_fwd_learning_work);
+
+	priv->mfwd.exception_chain = rswitch_gwca_get(priv);
+	priv->mfwd.learning_chain = rswitch_gwca_get(priv);
+
+	if (!priv->mfwd.exception_chain || !priv->mfwd.learning_chain) {
+		dev_err(&priv->pdev->dev, "Failed to allocate MFWD chain\n");
+		if (priv->mfwd.exception_chain)
+			rswitch_gwca_put(priv, priv->mfwd.exception_chain);
+		if (priv->mfwd.learning_chain)
+			rswitch_gwca_put(priv, priv->mfwd.learning_chain);
+
+		panic("TODO: Fail gracefully\n");
+	}
+
+	if (rswitch_gwca_chain_init(NULL, priv, priv->mfwd.exception_chain,
+				    false, false, RX_RING_SIZE))
+		panic("TODO: Failed to init exception chain\n");
+
+	if (rswitch_gwca_chain_init(NULL, priv, priv->mfwd.learning_chain,
+				    false, false, RX_RING_SIZE))
+		panic("TODO: Failed to init learning chain\n");
+
+	rswitch_gwca_chain_format(NULL, priv, priv->mfwd.exception_chain);
+	rswitch_gwca_chain_format(NULL, priv, priv->mfwd.learning_chain);
+
+	rs_write32(priv->mfwd.exception_chain->index, priv->addr + FWCEPTC);
+	rs_write32(FWCEPRC0_ALL, priv->addr + FWCEPRC0);
+	rs_write32(FWCEPRC1_ALL, priv->addr + FWCEPRC1);
+	rs_write32(FWCEPRC2_ALL, priv->addr + FWCEPRC2);
+
+	rs_write32(priv->mfwd.learning_chain->index, priv->addr + FWCLPTC);
+	/* TODO: Set anything you want */
+	rs_write32(0, 		/* <<<---------<<<HERE<<<-------<<< */
+		   priv->addr + FWCLPRC);
+
+	rswitch_enadis_data_irq(priv, priv->mfwd.exception_chain->index, true);
+	rswitch_enadis_data_irq(priv, priv->mfwd.learning_chain->index, true);
+
+	/* Reset L3 table */
+	rs_write32(1, priv->addr + FWLTHTIM);
+	/* TODO: Poll  FWLTHTIM.LTHR*/
+	msleep(1);
+	/* TODO: Fail gracefully */
+	if (!(rs_read32(priv->addr + FWLTHTIM) & BIT(1)))
+		panic("L3 table is not ready\n");
+
+	/* Enable 512 entries in non secure table and 3 hash collisions */
+	rs_write32(512 << 16 | 3, priv->addr + FWLTHHEC);
+
+	/* Disable IPv6 and IPv4 hash for now */
+	/* TODO: Enable it back */
+	rs_write32(0, priv->addr + FWSFHEC);
 }
 
 static int rswitch_init(struct rswitch_private *priv)
@@ -2683,7 +2912,7 @@ static int renesas_eth_sw_probe(struct platform_device *pdev)
 	/* Fixed to use GWCA0 */
 	priv->gwca.index = 3;
 	priv->gwca.num_chains = num_ndev * NUM_CHAINS_PER_NDEV +
-		num_virt_devices * 2 * NUM_CHAINS_PER_NDEV;
+		num_virt_devices * 2 * NUM_CHAINS_PER_NDEV + 2;
 	priv->gwca.chains = devm_kcalloc(&pdev->dev, priv->gwca.num_chains,
 					 sizeof(*priv->gwca.chains), GFP_KERNEL);
 	if (!priv->gwca.chains)
